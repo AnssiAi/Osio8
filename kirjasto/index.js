@@ -116,7 +116,7 @@ const typeDefs = `
   type Query {
     bookCount: Int!
     authorCount: Int!
-    allBooks(author: String): [Book!]!
+    allBooks(author: String, genre: String): [Book!]!
     allAuthors: [Author!]!
   }
 `
@@ -126,11 +126,41 @@ const resolvers = {
     bookCount: () => books.length,
     authorCount: () => authors.length,
     allBooks: (root, args) => {
-      if (!args.author) {
+      //Testi ratkaisu 8.5
+      const bookListing = books.reduce((listing, book) => {
+        const authCheck = args.author ? args.author === book.author : true
+        const genreCheck = args.genre ? book.genres.includes(args.genre) : true
+
+        if (authCheck && genreCheck) {
+          listing.push(book)
+        }
+
+        return listing
+      }, [])
+
+      /*
+      //Toimiva ratkaisu 8.5
+      if (!args.author && !args.genre) {
         return books
       }
-      const authorBooks = books.filter(book => book.author === args.author)
-      return authorBooks
+
+      let bookListing = books
+
+      if (args.author) {
+        const filterbyAuthor = bookListing.filter(
+          book => book.author === args.author
+        )
+        bookListing = filterbyAuthor
+      }
+      if (args.genre) {
+        const filterByGenre = bookListing.filter(book =>
+          book.genres.includes(args.genre)
+        )
+        console.log(filterByGenre)
+        bookListing = filterByGenre
+      }
+*/
+      return bookListing
     },
     allAuthors: () => authors,
   },
