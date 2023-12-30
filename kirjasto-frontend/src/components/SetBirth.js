@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useMutation } from '@apollo/client'
+import Select from 'react-select'
 import { ALL_AUTHORS, UPD_BORN } from '../queries'
 
-const SetBirth = () => {
-  const [name, setName] = useState('')
+const SetBirth = ({ authors }) => {
+  const [item, setItem] = useState(null)
   const [strBorn, setBorn] = useState('')
 
   //Mutaatio
@@ -14,25 +15,25 @@ const SetBirth = () => {
   const submit = async event => {
     event.preventDefault()
 
+    const name = item.value
+    //type='number' ei tee luotettavasti parsimista
     const born = parseInt(strBorn)
 
     updBirth({ variables: { name, born } })
 
-    setName('')
     setBorn('')
   }
+
+  //Muutetaan authors react-select ymmärtämään muotoon
+  const options = authors.map(a => {
+    return { value: a.name, label: a.name }
+  })
 
   return (
     <div>
       <h3>Set birthyear</h3>
       <form onSubmit={submit}>
-        <div>
-          name
-          <input
-            value={name}
-            onChange={({ target }) => setName(target.value)}
-          />
-        </div>
+        <Select value={item} onChange={setItem} options={options} />
         <div>
           born
           <input

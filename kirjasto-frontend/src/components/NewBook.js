@@ -20,6 +20,7 @@ const NewBook = props => {
   const submit = async event => {
     event.preventDefault()
 
+    //type='number' ei tee luotettavasti parsimista
     const published = parseInt(strPublished)
 
     createBook({ variables: { title, author, published, genres } })
