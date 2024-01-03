@@ -23,32 +23,6 @@ mongoose
     console.log('error connecting to MongoDB', error.message)
   })
 
-let authors = [
-  {
-    name: 'Robert Martin',
-    id: 'afa51ab0-344d-11e9-a414-719c6709cf3e',
-    born: 1952,
-  },
-  {
-    name: 'Martin Fowler',
-    id: 'afa5b6f0-344d-11e9-a414-719c6709cf3e',
-    born: 1963,
-  },
-  {
-    name: 'Fyodor Dostoevsky',
-    id: 'afa5b6f1-344d-11e9-a414-719c6709cf3e',
-    born: 1821,
-  },
-  {
-    name: 'Joshua Kerievsky', // birthyear not known
-    id: 'afa5b6f2-344d-11e9-a414-719c6709cf3e',
-  },
-  {
-    name: 'Sandi Metz', // birthyear not known
-    id: 'afa5b6f3-344d-11e9-a414-719c6709cf3e',
-  },
-]
-
 const typeDefs = `
   type Author {
     name: String!
@@ -88,19 +62,40 @@ const typeDefs = `
 
 const resolvers = {
   Query: {
-    bookCount: () => books.length,
-    authorCount: () => authors.length,
+    bookCount: async (root, args) => {
+      return Book.countDocuments()
+    },
+    authorCount: async (root, args) => {
+      return Author.countDocuments()
+    },
     allBooks: async (root, args) => {
-      return Book.find({})
+      //Ei ole kaunis mutta toimii
+      if (!args.genre && !args.author) {
+        return Book.find({})
+      }
+
+      if (args.author && !args.genre) {
+        const findAuthor = await Author.findOne({ name: args.author })
+        return Book.find({ author: findAuthor })
+      }
+
+      if (args.genre && !args.author) {
+        return Book.find({ genres: args.genre })
+      }
+
+      if (args.genre && args.author) {
+        const findAuthor = await Author.findOne({ name: args.author })
+
+        return Book.find({ author: findAuthor, genres: args.genre })
+      }
     },
     allAuthors: async (root, args) => {
       return Author.find({})
     },
   },
   Author: {
-    bookCount: root => {
-      const authorBooks = books.filter(book => book.author === root.name)
-      return authorBooks.length
+    bookCount: async root => {
+      return Book.countDocuments({ author: root })
     },
   },
   Mutation: {
@@ -138,14 +133,22 @@ const resolvers = {
         })
       }
     },
-    editAuthor: (root, args) => {
-      const author = authors.find(a => a.name === args.name)
-      if (!author) {
-        return null
+    editAuthor: async (root, args) => {
+      const author = await Author.findOne({ name: args.name })
+      author.born = args.setBornTo
+
+      try {
+        await author.save()
+      } catch (error) {
+        throw new GraphQLError('editing author failed', {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            invalidArgs: args.name,
+            error,
+          },
+        })
       }
-      const updatedAuthor = { ...author, born: args.setBornTo }
-      authors = authors.map(a => (a.name === args.name ? updatedAuthor : a))
-      return updatedAuthor
+      return author
     },
   },
 }
