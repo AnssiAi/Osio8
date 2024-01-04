@@ -91,22 +91,25 @@ const resolvers = {
     allBooks: async (root, args) => {
       //Ei ole kaunis mutta toimii
       if (!args.genre && !args.author) {
-        return Book.find({})
+        //Populate täyttää author kentän objektin tiedoilla
+        return Book.find({}).populate('author')
       }
 
       if (args.author && !args.genre) {
         const findAuthor = await Author.findOne({ name: args.author })
-        return Book.find({ author: findAuthor })
+        return Book.find({ author: findAuthor }).populate('author')
       }
 
       if (args.genre && !args.author) {
-        return Book.find({ genres: args.genre })
+        return Book.find({ genres: args.genre }).populate('author')
       }
 
       if (args.genre && args.author) {
         const findAuthor = await Author.findOne({ name: args.author })
 
-        return Book.find({ author: findAuthor, genres: args.genre })
+        return Book.find({ author: findAuthor, genres: args.genre }).populate(
+          'author'
+        )
       }
     },
     allAuthors: async (root, args) => {
@@ -147,15 +150,15 @@ const resolvers = {
 
           await book.save()
           return book
-        } else {
-          const book = new Book({
-            ...args,
-            author: findAuthor,
-          })
-
-          await book.save()
-          return book
         }
+
+        const book = new Book({
+          ...args,
+          author: findAuthor,
+        })
+
+        await book.save()
+        return book
       } catch (error) {
         throw new GraphQLError('Adding book failed', {
           extensions: {
@@ -180,7 +183,9 @@ const resolvers = {
       try {
         const author = await Author.findOne({ name: args.name })
         author.born = args.setBornTo
+
         await author.save()
+        return author
       } catch (error) {
         throw new GraphQLError('editing author failed', {
           extensions: {
@@ -190,7 +195,6 @@ const resolvers = {
           },
         })
       }
-      return author
     },
     createUser: async (root, args) => {
       const user = new User({ ...args })
