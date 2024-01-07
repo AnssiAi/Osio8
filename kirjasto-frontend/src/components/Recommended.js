@@ -7,7 +7,9 @@ import { GET_USER, ALL_BOOKS } from '../queries'
 //Palauttaa taulukon
 
 const Recommended = props => {
-  const user = useQuery(GET_USER)
+  const user = useQuery(GET_USER, {
+    fetchPolicy: 'cache-and-network',
+  })
 
   //Custom kysely toimisi vähemmällä verkkoliikenteellä
   //Kyselyn tekeminen skipataan kunnes user.data on saatavilla
@@ -16,14 +18,17 @@ const Recommended = props => {
     skip: user.loading || !user.data?.me?.favoriteGenre,
   })
 
+  const loading = user.loading || books.loading
+  const error = user.error || books.error
+
   if (!props.show) {
     return null
   }
-  if (user.loading) {
+  if (loading) {
     return <div>loading...</div>
   }
-  if (user.error) {
-    return <div>Error {user.error.message}</div>
+  if (error) {
+    return <div>Error {error.message}</div>
   }
 
   const bookList = books.data.allBooks

@@ -4,11 +4,13 @@ import { useState } from 'react'
 
 const Books = props => {
   //Etsityn genren muuttujatiedon säilyttämiseksi
-  const [genre, setGenre] = useState('')
+  const [bookGenre, setGenre] = useState(null)
 
   //Parametrisoitu kyselymuoto
-  const { loading, error, data } = useQuery(ALL_BOOKS, {
-    variables: { genre },
+  const { data, loading, error, refetch } = useQuery(ALL_BOOKS, {
+    variables: { genre: bookGenre },
+    fetchPolicy: 'network-only',
+    nextFetchPolicy: 'cache-first',
   })
 
   if (!props.show) {
@@ -21,11 +23,11 @@ const Books = props => {
     return <div>Error {error.message}</div>
   }
 
-  const books = data.allBooks
+  const bookList = data.allBooks
 
   //Kerätään kirjojen genret listaan nappien generoimiseksi olemassaolevien genrejen pohjalta
   //Tämän listan olisi hyvä olla muuttumaton
-  const genres = books.reduce((array, item) => {
+  const genres = bookList.reduce((array, item) => {
     const itGenres = [...item.genres]
 
     itGenres.forEach(i => {
@@ -43,11 +45,6 @@ const Books = props => {
     setGenre(event.target.value)
   }
 
-  const clearGenre = event => {
-    event.preventDefault()
-    setGenre('')
-  }
-
   return (
     <div>
       <h2>books</h2>
@@ -59,7 +56,7 @@ const Books = props => {
             <th>author</th>
             <th>published</th>
           </tr>
-          {books.map(a => (
+          {bookList.map(a => (
             <tr key={a.id}>
               <td>{a.title}</td>
               <td>{a.author.name}</td>
@@ -73,7 +70,9 @@ const Books = props => {
           {g}
         </button>
       ))}
-      <button onClick={clearGenre}>show all</button>
+      <button value={null} onClick={assignGenre}>
+        show all
+      </button>
     </div>
   )
 }
