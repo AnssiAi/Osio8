@@ -8,7 +8,8 @@ import { GET_USER, ALL_BOOKS } from '../queries'
 
 const Recommended = props => {
   const user = useQuery(GET_USER, {
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'network-only',
+    nextFetchPolicy: 'cache-first',
   })
 
   //Custom kysely toimisi vähemmällä verkkoliikenteellä

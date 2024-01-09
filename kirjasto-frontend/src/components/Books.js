@@ -4,14 +4,10 @@ import { useState } from 'react'
 
 const Books = props => {
   //Etsityn genren muuttujatiedon säilyttämiseksi
-  const [bookGenre, setGenre] = useState(null)
+  //const [bookGenre, setGenre] = useState('')
 
-  //Parametrisoitu kyselymuoto
-  const { data, loading, error, refetch } = useQuery(ALL_BOOKS, {
-    variables: { genre: bookGenre },
-    fetchPolicy: 'network-only',
-    nextFetchPolicy: 'cache-first',
-  })
+  //Parametrisoitu kyselymuoto - muutettu refetch muotoon
+  const { data, loading, error, refetch } = useQuery(ALL_BOOKS)
 
   if (!props.show) {
     return null
@@ -42,7 +38,10 @@ const Books = props => {
 
   const assignGenre = event => {
     event.preventDefault()
-    setGenre(event.target.value)
+    refetch({
+      genre: event.target.value,
+    })
+    //setGenre(event.target.value)
   }
 
   return (
@@ -70,7 +69,7 @@ const Books = props => {
           {g}
         </button>
       ))}
-      <button value={null} onClick={assignGenre}>
+      <button value={''} onClick={assignGenre}>
         show all
       </button>
     </div>

@@ -5,7 +5,8 @@ import Books from './components/Books'
 import NewBook from './components/NewBook'
 import LoginForm from './components/LoginForm'
 import Recommended from './components/Recommended'
-import { BOOK_ADDED } from './queries'
+import { ALL_BOOKS, BOOK_ADDED } from './queries'
+import { updateCache } from './UpdateCache'
 
 const App = () => {
   const [page, setPage] = useState('authors')
@@ -19,7 +20,14 @@ const App = () => {
 
   useSubscription(BOOK_ADDED, {
     onData: ({ data }) => {
-      window.alert(`Kirja lisätty ${data.data.bookAdded.title}`)
+      const addedBook = data.data.bookAdded
+      window.alert(`Kirja lisätty ${addedBook.title}`)
+
+      updateCache(
+        client.cache,
+        { query: ALL_BOOKS, variables: { genre: '' } },
+        addedBook
+      )
     },
   })
 
